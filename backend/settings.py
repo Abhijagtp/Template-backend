@@ -45,6 +45,7 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -107,6 +108,7 @@ CORS_ALLOWED_ORIGINS = [
     'https://yourtemplatehub.com',
     'https://www.yourtemplatehub.com',
     'http://localhost:5173',
+    'https://template-frontend-2zle.onrender.com/',
 ]
 
 # Email
