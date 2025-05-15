@@ -1,0 +1,17 @@
+<!-- templates/templates/support_response.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Support Inquiry Update</title>
+</head>
+<body>
+    <h2>Update on Your Support Inquiry - {{ inquiry_id }}</h2>
+    <p>Dear {{ email }},</p>
+    <p>We have an update on your support inquiry ({{ inquiry_id }}):</p>
+    <p><strong>Response:</strong> {{ response }}</p>
+    <p><strong>Status:</strong> {{ inquiry_type }}</p>
+    <p>You can track the status at <a href="http://localhost:5173/support/track">our support page</a>.</p>
+    <p>If you have further questions, contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
+    <p>Best regards,<br>{{ company_name }}</p>
+</body>
+</html>

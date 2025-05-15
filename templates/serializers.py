@@ -1,0 +1,69 @@
+from rest_framework import serializers
+from .models import Category, Template, Review,Payment
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['id', 'template', 'user', 'rating', 'comment', 'date']
+        read_only_fields = ['date']
+
+    def validate_rating(self, value):
+        if not (1 <= value <= 5):
+            raise serializers.ValidationError("Rating must be between 1 and 5.")
+        return value
+
+class TemplateSerializer(serializers.ModelSerializer):
+    category = CategorySerializer()
+    reviews = ReviewSerializer(many=True, read_only=True)
+    average_rating = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Template
+        fields = ['id', 'title', 'description', 'category', 'price', 'image', 'additional_images', 'features', 'tech_stack', 'reviews', 'average_rating', 'live_preview_url']
+
+    def get_average_rating(self, obj):
+        reviews = obj.reviews.all()
+        if reviews.exists():
+            return round(sum(review.rating for review in reviews) / reviews.count(), 1)
+        return 0
+    
+
+class PaymentSerializer(serializers.ModelSerializer):
+    template = TemplateSerializer(read_only=True)
+
+    class Meta:
+        model = Payment
+        fields = '__all__'
+
+
+
+from rest_framework import serializers
+from .models import SupportInquiry
+
+class SupportInquirySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SupportInquiry
+        fields = ['inquiry_id', 'email', 'inquiry_type', 'description', 'order_id', 'status', 'response', 'created_at']
+        read_only_fields = ['inquiry_id', 'status', 'response', 'created_at']
+
+    def validate_email(self, value):
+        if '@' not in value:
+            raise serializers.ValidationError("A valid email is required.")
+        return value
+
+    def validate_description(self, value):
+        if len(value.strip()) < 10:
+            raise serializers.ValidationError("Description must be at least 10 characters long.")
+        return value
+
+    def validate_order_id(self, value):
+        if value:
+            from .models import Payment
+            if not Payment.objects.filter(order_id=value).exists():
+                raise serializers.ValidationError("Invalid order ID.")
+        return value

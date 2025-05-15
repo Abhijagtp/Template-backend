@@ -1,0 +1,21 @@
+<!-- templates/templates/support_confirmation.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Support Inquiry Confirmation</title>
+</head>
+<body>
+    <h2>Thank You for Contacting TemplateHub Support</h2>
+    <p>Dear {{ email }},</p>
+    <p>We have received your support inquiry with the following details:</p>
+    <ul>
+        <li><strong>Inquiry ID:</strong> {{ inquiry_id }}</li>
+        <li><strong>Type:</strong> {{ inquiry_type }}</li>
+        <li><strong>Order ID:</strong> {{ order_id }}</li>
+        <li><strong>Description:</strong> {{ description }}</li>
+    </ul>
+    <p>You can track the status of your inquiry at <a href="http://localhost:5173/support/track">our support page</a> using your inquiry ID.</p>
+    <p>We will get back to you soon. If you have further questions, contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
+    <p>Best regards,<br>{{ company_name }}</p>
+</body>
+</html>

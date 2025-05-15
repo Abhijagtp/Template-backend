@@ -1,0 +1,20 @@
+<!-- templates/templates/support_alert.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>New Support Inquiry</title>
+</head>
+<body>
+    <h2>New Support Inquiry - {{ inquiry_id }}</h2>
+    <p>A new support inquiry has been submitted with the following details:</p>
+    <ul>
+        <li><strong>Inquiry ID:</strong> {{ inquiry_id }}</li>
+        <li><strong>Email:</strong> {{ email }}</li>
+        <li><strong>Type:</strong> {{ inquiry_type }}</li>
+        <li><strong>Order ID:</strong> {{ order_id }}</li>
+        <li><strong>Description:</strong> {{ description }}</li>
+    </ul>
+    <p>Please review and respond via the admin panel.</p>
+    <p>Best regards,<br>{{ company_name }}</p>
+</body>
+</html>

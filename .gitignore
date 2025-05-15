@@ -1,0 +1,8 @@
+# backend/.gitignore
+.env
+*.env
+staticfiles/
+debug.log
+*.sqlite3
+__pycache__/
+*.pyc

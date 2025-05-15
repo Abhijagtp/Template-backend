@@ -1,0 +1,25 @@
+<!-- templates/templates/email_template.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Template Purchase</title>
+</head>
+<body>
+    <h2>Thank You for Your Purchase!</h2>
+    <p>Dear {{ user_email }},</p>
+    <p>Thank you for purchasing the <strong>{{ template_title }}</strong> from {{ company_name }}.</p>
+    <h3>Order Details</h3>
+    <ul>
+        <li><strong>Order ID:</strong> {{ order_id }}</li>
+        <li><strong>Amount:</strong> ₹{{ amount }}</li>
+    </ul>
+    {% if download_url %}
+        <p>You can download your template using the following link:</p>
+        <p><a href="{{ download_url }}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Download Template</a></p>
+    {% else %}
+        <p>The download link is not available at the moment. Please contact support.</p>
+    {% endif %}
+    <p>If you have any questions, please contact our support team at <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
+    <p>Best regards,<br>{{ company_name }}</p>
+</body>
+</html>
