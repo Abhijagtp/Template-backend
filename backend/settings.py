@@ -108,7 +108,7 @@ CORS_ALLOWED_ORIGINS = [
     'https://yourtemplatehub.com',
     'https://www.yourtemplatehub.com',
     'http://localhost:5173',
-    'https://template-frontend-2zle.onrender.com/',
+    'https://template-frontend-2zle.onrender.com',
 ]
 
 # Email
