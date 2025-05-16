@@ -164,3 +164,23 @@ LOGGING = {
         },
     },
 }
+
+
+
+import os
+from django.contrib.auth import get_user_model
+
+# Create a superuser if it doesn't exist
+def create_superuser():
+    User = get_user_model()
+    if not User.objects.filter(username='admin').exists():
+        User.objects.create_superuser(
+            username='abhi',
+            email='ajagtap2210@gmail.com',
+            password='abhi@112'
+        )
+        print("Superuser created successfully.")
+
+# Run only on Render
+if os.getenv('RENDER') == 'true':
+    create_superuser()
