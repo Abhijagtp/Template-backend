@@ -99,6 +99,7 @@ class TemplateViewSet(viewsets.ModelViewSet):
             logger.info(f"Payment created: {payment.id}, Amount: {template.price}")
 
             # Prepare Cashfree order payload
+            frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')  # Use environment variable
             payload = {
                 "order_id": order_id,
                 "order_amount": float(template.price),
@@ -109,8 +110,8 @@ class TemplateViewSet(viewsets.ModelViewSet):
                     "customer_phone": user_phone or "9999999999",
                 },
                 "order_meta": {
-                    "return_url": f"http://localhost:5173/payment-status?order_id={order_id}",
-                    "notify_url": "https://d95e-103-10-226-54.ngrok-free.app/api/webhook/",  # Replace with your ngrok URL
+                    "return_url": f"{frontend_url}/payment-status?order_id={order_id}",
+                    "notify_url": os.getenv('WEBHOOK_URL', 'https://template-backend-4i5o.onrender.com/api/webhook/'),
                 }
             }
             logger.info(f"Payload: {payload}")
@@ -158,6 +159,7 @@ class TemplateViewSet(viewsets.ModelViewSet):
         except Exception as e:
             logger.error(f"Error in initiate_payment: {str(e)}")
             return Response({'error': f'Server error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
