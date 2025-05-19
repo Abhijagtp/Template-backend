@@ -1,8 +1,8 @@
-# backend/backend/settings.py
 import environ
 import os
 import dj_database_url
 from pathlib import Path
+import cloudinary  # Add this import
 
 # Define BASE_DIR
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,8 +30,8 @@ INSTALLED_APPS = [
     'templates',
     'rest_framework',
     'corsheaders',
-    'cloudinary_storage',
-    'cloudinary',
+    'cloudinary',  # Ensure this is before cloudinary_storage
+    'cloudinary_storage',  # Ensure this order
 ]
 
 REST_FRAMEWORK = {
@@ -143,6 +143,23 @@ print("CASHFREE_SECRET_KEY:", CASHFREE_SECRET_KEY)
 print("CASHFREE_ENV:", CASHFREE_ENV)
 print("CASHFREE_BASE_URL:", CASHFREE_BASE_URL)
 
+# Cloudinary settings
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+}
+
+# Initialize Cloudinary SDK
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
+    secure=True
+)
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 # Logging
 LOGGING = {
     'version': 1,
@@ -166,18 +183,3 @@ LOGGING = {
         },
     },
 }
-
-
-
-# cloudinary settings
-import os
-
-
-
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
-}
-
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
