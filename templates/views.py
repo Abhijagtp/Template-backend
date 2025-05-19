@@ -85,9 +85,15 @@ class TemplateViewSet(viewsets.ModelViewSet):
             logger.info(f"Template: {template.id}, Email: {user_email}, Phone: {user_phone}")
 
             if not user_email or '@' not in user_email:
+                logger.warning(f"Invalid email provided: {user_email}")
                 return Response({'error': 'A valid email is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Create a payment record
+            # Validate template price
+            if not template.price or template.price <= 0:
+                logger.error(f"Invalid template price for template_id={pk}: {template.price}")
+                return Response({'error': 'Template price is invalid.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create payment record
             order_id = f"order_{template.id}_{int(timezone.now().timestamp())}"
             payment = Payment.objects.create(
                 template=template,
@@ -97,10 +103,19 @@ class TemplateViewSet(viewsets.ModelViewSet):
                 amount=template.price,
                 status='PENDING'
             )
-            logger.info(f"Payment created: {payment.id}, Amount: {template.price}")
+            logger.info(f"Payment created: payment_id={payment.id}, order_id={order_id}, amount={template.price}")
+
+            # Validate Cashfree credentials
+            if not settings.CASHFREE_APP_ID or not settings.CASHFREE_SECRET_KEY:
+                logger.error("Cashfree credentials missing")
+                return Response({'error': 'Payment gateway misconfigured.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
             # Prepare Cashfree order payload
-            frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')  # Use environment variable
+            frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+            webhook_url = os.getenv('WEBHOOK_URL', 'https://template-backend-4i5o.onrender.com/api/webhook/')
+            # Ensure webhook_url starts with https://
+            if not webhook_url.startswith('https://'):
+                webhook_url = f"https://{webhook_url.lstrip('/')}"
             payload = {
                 "order_id": order_id,
                 "order_amount": float(template.price),
@@ -112,10 +127,10 @@ class TemplateViewSet(viewsets.ModelViewSet):
                 },
                 "order_meta": {
                     "return_url": f"{frontend_url}/payment-status?order_id={order_id}",
-                    "notify_url": os.getenv('WEBHOOK_URL', 'https://template-backend-4i5o.onrender.com/api/webhook/'),
+                    "notify_url": webhook_url,
                 }
             }
-            logger.info(f"Payload: {payload}")
+            logger.info(f"Cashfree payload: {payload}")
 
             # Make API call to Cashfree
             headers = {
@@ -124,27 +139,29 @@ class TemplateViewSet(viewsets.ModelViewSet):
                 "x-client-secret": settings.CASHFREE_SECRET_KEY,
                 "Content-Type": "application/json",
             }
-            logger.info(f"Headers (excluding secret): { {k: v for k, v in headers.items() if k != 'x-client-secret'} }")
 
             response = requests.post(
                 f"{settings.CASHFREE_BASE_URL}/pg/orders",
                 json=payload,
                 headers=headers
             )
-            logger.info(f"Cashfree Response Status: {response.status_code}")
-            logger.info(f"Cashfree Response: {response.json()}")
+            logger.info(f"Cashfree response status: {response.status_code}")
+            logger.debug(f"Cashfree response body: {response.json()}")
 
             if response.status_code == 200:
                 payment_data = response.json()
                 payment_session_id = payment_data.get("payment_session_id")
                 if not payment_session_id:
-                    logger.error("No payment_session_id in Cashfree response")
+                    logger.error(f"No payment_session_id in Cashfree response: {payment_data}")
+                    payment.status = 'FAILED'
+                    payment.save()
                     return Response(
-                        {'cashfree_error': 'Failed to generate payment session'},
+                        {'error': 'Failed to generate payment session'},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR
                     )
                 payment.order_id = order_id
                 payment.save()
+                logger.info(f"Payment session created: session_id={payment_session_id}")
                 return Response({
                     'payment_session_id': payment_session_id,
                     'order_id': order_id
@@ -152,13 +169,17 @@ class TemplateViewSet(viewsets.ModelViewSet):
             else:
                 payment.status = 'FAILED'
                 payment.save()
-                logger.error(f"Cashfree Error: {response.json()}")
+                logger.error(f"Cashfree API error: {response.json()}")
                 return Response({
                     'error': 'Failed to initiate payment.',
                     'cashfree_error': response.json().get('message', 'Unknown error')
                 }, status=response.status_code)
+
+        except Template.DoesNotExist:
+            logger.error(f"Template with id={pk} not found")
+            return Response({'error': 'Template not found.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            logger.error(f"Error in initiate_payment: {str(e)}")
+            logger.error(f"Unexpected error in initiate_payment: {str(e)}", exc_info=True)
             return Response({'error': f'Server error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
