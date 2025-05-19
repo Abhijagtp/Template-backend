@@ -34,6 +34,12 @@ class TemplateSerializer(serializers.ModelSerializer):
             'average_rating', 'live_preview_url', 'zip_file_url'
         ]
 
+    def get_average_rating(self, obj):
+        reviews = obj.reviews.all()
+        if reviews.exists():
+            return round(sum(review.rating for review in reviews) / reviews.count(), 1)
+        return 0
+
     def get_image(self, obj):
         if obj.image:
             try:
@@ -50,11 +56,6 @@ class TemplateSerializer(serializers.ModelSerializer):
             except Exception as e:
                 print(f"Error generating Cloudinary URL for image {obj.image}: {str(e)}")
                 return None
-        return None
-
-    def get_image(self, obj):
-        if obj.image and hasattr(obj.image, 'url'):
-            return obj.image.url  # Cloudinary full URL
         return None
 
     def get_additional_images(self, obj):
