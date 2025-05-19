@@ -18,6 +18,7 @@ import json
 import logging
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
+import os 
 
 # Set up logging
 logger = logging.getLogger(__name__)
