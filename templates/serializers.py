@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import Category, Template, Review, Payment
-import cloudinary.uploader
+from .models import Category, Template, Review, Payment, SupportInquiry
+import cloudinary
+from cloudinary import CloudinaryImage
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -40,14 +41,19 @@ class TemplateSerializer(serializers.ModelSerializer):
         return 0
 
     def get_image(self, obj):
-        if obj.image:
+        if obj.image and hasattr(obj.image, 'url'):
             return obj.image.url  # Cloudinary full URL
         return None
 
     def get_additional_images(self, obj):
-        # additional_images is a JSONField containing a list of image paths
+        # additional_images is a JSONField containing a list of image paths (public IDs)
         if obj.additional_images:
-            return [cloudinary.uploader.build_url(image) for image in obj.additional_images]
+            try:
+                return [CloudinaryImage(image).build_url(secure=True) for image in obj.additional_images]
+            except Exception as e:
+                # Log the error for debugging
+                print(f"Error building Cloudinary URLs for additional_images: {str(e)}")
+                return []
         return []
 
     def validate_price(self, value):
@@ -57,18 +63,26 @@ class TemplateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # Handle category creation if needed
-        category_data = self.context['request'].data.get('category')
-        if category_data:
-            category, _ = Category.objects.get_or_create(name=category_data['name'])
-            validated_data['category'] = category
+        request = self.context.get('request')
+        if request and 'category' in request.data:
+            category_data = request.data.get('category')
+            if isinstance(category_data, dict) and 'name' in category_data:
+                category, _ = Category.objects.get_or_create(name=category_data['name'])
+                validated_data['category'] = category
+            else:
+                raise serializers.ValidationError("Invalid category data. Must provide 'name'.")
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         # Handle category update if needed
-        category_data = self.context['request'].data.get('category')
-        if category_data:
-            category, _ = Category.objects.get_or_create(name=category_data['name'])
-            validated_data['category'] = category
+        request = self.context.get('request')
+        if request and 'category' in request.data:
+            category_data = request.data.get('category')
+            if isinstance(category_data, dict) and 'name' in category_data:
+                category, _ = Category.objects.get_or_create(name=category_data['name'])
+                validated_data['category'] = category
+            else:
+                raise serializers.ValidationError("Invalid category data. Must provide 'name'.")
         return super().update(instance, validated_data)
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -91,10 +105,6 @@ class PaymentSerializer(serializers.ModelSerializer):
         if '@' not in value:
             raise serializers.ValidationError("A valid email is required.")
         return value
-
-
-from rest_framework import serializers
-from .models import SupportInquiry, Payment
 
 class SupportInquirySerializer(serializers.ModelSerializer):
     class Meta:
