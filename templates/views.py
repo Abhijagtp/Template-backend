@@ -131,6 +131,7 @@ class TemplateViewSet(viewsets.ModelViewSet):
                 }
             }
             logger.info(f"Cashfree payload: {payload}")
+            logger.debug(f"Using FRONTEND_URL: {frontend_url}")  # Added for debugging
 
             # Make API call to Cashfree
             headers = {
@@ -181,7 +182,6 @@ class TemplateViewSet(viewsets.ModelViewSet):
         except Exception as e:
             logger.error(f"Unexpected error in initiate_payment: {str(e)}", exc_info=True)
             return Response({'error': f'Server error: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
