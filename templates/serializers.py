@@ -34,11 +34,23 @@ class TemplateSerializer(serializers.ModelSerializer):
             'average_rating', 'live_preview_url', 'zip_file_url'
         ]
 
-    def get_average_rating(self, obj):
-        reviews = obj.reviews.all()
-        if reviews.exists():
-            return round(sum(review.rating for review in reviews) / reviews.count(), 1)
-        return 0
+    def get_image(self, obj):
+        if obj.image:
+            try:
+                # First, try to get the Cloudinary URL directly
+                if hasattr(obj.image, 'url'):
+                    image_url = obj.image.url
+                    # Check if the URL is a full Cloudinary URL
+                    if image_url.startswith('http'):
+                        return image_url
+                    # If it's a relative path, build the URL manually
+                # Extract the public ID (remove the "templates/" prefix)
+                public_id = str(obj.image).replace('templates/', '').replace('.jpg', '')
+                return CloudinaryImage(public_id).build_url(secure=True)
+            except Exception as e:
+                print(f"Error generating Cloudinary URL for image {obj.image}: {str(e)}")
+                return None
+        return None
 
     def get_image(self, obj):
         if obj.image and hasattr(obj.image, 'url'):
