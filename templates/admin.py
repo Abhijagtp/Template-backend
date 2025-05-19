@@ -2,11 +2,30 @@ from django.contrib import admin
 
 # Register your models here.
 from .models import Category, Template, Review, Payment, SupportInquiry
+from .forms import TemplateAdminForm
 
+
+@admin.register(Template)
+class TemplateAdmin(admin.ModelAdmin):
+    form = TemplateAdminForm
+    list_display = ['title', 'category', 'price', 'image', 'average_rating']
+    list_filter = ['category']
+    search_fields = ['title', 'description']
+    fields = [
+        'title', 'description', 'category', 'price', 'image',
+        'additional_images_upload', 'additional_images', 'features',
+        'tech_stack', 'live_preview_url', 'zip_file_url'
+    ]
+
+    def get_readonly_fields(self, request, obj=None):
+        return ['average_rating', 'additional_images']
+    
 
 admin.site.site_header = "Template Admin"
+
+
 admin.site.register(Category)
-admin.site.register(Template)
+
 admin.site.register(Review)
 admin.site.register(Payment)
 
