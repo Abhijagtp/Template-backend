@@ -7,6 +7,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 class TemplateAdminForm(forms.ModelForm):
+    image_upload = forms.FileField(
+        label="Upload Main Image",
+        required=False
+    )
     additional_images_upload = MultipleFileField(
         label="Upload Additional Images",
         required=False
@@ -16,23 +20,24 @@ class TemplateAdminForm(forms.ModelForm):
         model = Template
         fields = '__all__'
 
-    def clean_image(self):
-        image_file = self.cleaned_data.get('image')
-        if image_file and hasattr(image_file, 'file'):  # Check if a new file is uploaded
+    def clean(self):
+        cleaned_data = super().clean()
+        image_upload = cleaned_data.get('image_upload')
+        if image_upload:
             try:
                 # Upload the image to Cloudinary
                 result = cloudinary.uploader.upload(
-                    image_file,
+                    image_upload,
                     folder="templates/",
                     resource_type="image"
                 )
-                # Store the public_id (e.g., "templates/image_name")
-                self.cleaned_data['image'] = result['public_id']
+                # Store the public_id in the image field (CharField)
+                cleaned_data['image'] = result['public_id']
                 logger.info(f"Successfully uploaded image to Cloudinary: {result['public_id']}")
             except Exception as e:
                 logger.error(f"Failed to upload image to Cloudinary: {str(e)}")
                 raise forms.ValidationError(f"Failed to upload image to Cloudinary: {str(e)}")
-        return self.cleaned_data['image']
+        return cleaned_data
 
     def clean_additional_images_upload(self):
         files = self.files.getlist('additional_images_upload')
@@ -46,7 +51,7 @@ class TemplateAdminForm(forms.ModelForm):
                         folder="templates/",
                         resource_type="image"
                     )
-                    uploaded_urls.append(result['public_id'])  # e.g., "templates/extra1"
+                    uploaded_urls.append(result['public_id'])
                     logger.info(f"Successfully uploaded additional image to Cloudinary: {result['public_id']}")
                 except Exception as e:
                     logger.error(f"Failed to upload additional image to Cloudinary: {str(e)}")
@@ -57,7 +62,6 @@ class TemplateAdminForm(forms.ModelForm):
         instance = super().save(commit=False)
         additional_images = self.cleaned_data.get('additional_images_upload', [])
         if additional_images:
-            # Update additional_images JSONField
             instance.additional_images = additional_images
         if commit:
             instance.save()
