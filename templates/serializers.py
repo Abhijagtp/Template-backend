@@ -43,28 +43,26 @@ class TemplateSerializer(serializers.ModelSerializer):
     def get_image(self, obj):
         if obj.image:
             try:
-                # First, try to get the Cloudinary URL directly
-                if hasattr(obj.image, 'url'):
-                    image_url = obj.image.url
-                    # Check if the URL is a full Cloudinary URL
-                    if image_url.startswith('http'):
-                        return image_url
-                    # If it's a relative path, build the URL manually
-                # Extract the public ID (remove the "templates/" prefix)
-                public_id = str(obj.image).replace('templates/', '').replace('.jpg', '')
-                return CloudinaryImage(public_id).build_url(secure=True)
+                # obj.image is now a public_id (e.g., "templates/image_name")
+                public_id = obj.image
+                # Remove "templates/" prefix if present for Cloudinary URL generation
+                if public_id.startswith('templates/'):
+                    public_id_clean = public_id.replace('templates/', '')
+                else:
+                    public_id_clean = public_id
+                # Remove file extension if any
+                public_id_clean = public_id_clean.rsplit('.', 1)[0]
+                return CloudinaryImage(public_id_clean).build_url(secure=True)
             except Exception as e:
                 print(f"Error generating Cloudinary URL for image {obj.image}: {str(e)}")
                 return None
         return None
 
     def get_additional_images(self, obj):
-        # additional_images is a JSONField containing a list of image paths (public IDs)
         if obj.additional_images:
             try:
                 return [CloudinaryImage(image).build_url(secure=True) for image in obj.additional_images]
             except Exception as e:
-                # Log the error for debugging
                 print(f"Error building Cloudinary URLs for additional_images: {str(e)}")
                 return []
         return []
@@ -75,7 +73,6 @@ class TemplateSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        # Handle category creation if needed
         request = self.context.get('request')
         if request and 'category' in request.data:
             category_data = request.data.get('category')
@@ -87,7 +84,6 @@ class TemplateSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        # Handle category update if needed
         request = self.context.get('request')
         if request and 'category' in request.data:
             category_data = request.data.get('category')
@@ -97,6 +93,7 @@ class TemplateSerializer(serializers.ModelSerializer):
             else:
                 raise serializers.ValidationError("Invalid category data. Must provide 'name'.")
         return super().update(instance, validated_data)
+
 
 class PaymentSerializer(serializers.ModelSerializer):
     template = TemplateSerializer(read_only=True)

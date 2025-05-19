@@ -1,6 +1,10 @@
 from django import forms
 from .models import Template
 from .fields import MultipleFileField  
+import cloudinary.uploader
+import logging
+
+logger = logging.getLogger(__name__)
 
 class TemplateAdminForm(forms.ModelForm):
     additional_images_upload = MultipleFileField(
@@ -12,15 +16,41 @@ class TemplateAdminForm(forms.ModelForm):
         model = Template
         fields = '__all__'
 
+    def clean_image(self):
+        image_file = self.cleaned_data.get('image')
+        if image_file and hasattr(image_file, 'file'):  # Check if a new file is uploaded
+            try:
+                # Upload the image to Cloudinary
+                result = cloudinary.uploader.upload(
+                    image_file,
+                    folder="templates/",
+                    resource_type="image"
+                )
+                # Store the public_id (e.g., "templates/image_name")
+                self.cleaned_data['image'] = result['public_id']
+                logger.info(f"Successfully uploaded image to Cloudinary: {result['public_id']}")
+            except Exception as e:
+                logger.error(f"Failed to upload image to Cloudinary: {str(e)}")
+                raise forms.ValidationError(f"Failed to upload image to Cloudinary: {str(e)}")
+        return self.cleaned_data['image']
+
     def clean_additional_images_upload(self):
         files = self.files.getlist('additional_images_upload')
         uploaded_urls = []
         if files:
-            import cloudinary.uploader
             for file in files:
-                # Upload each file to Cloudinary
-                result = cloudinary.uploader.upload(file, folder="templates/")
-                uploaded_urls.append(result['public_id'])  # e.g., "templates/extra1"
+                try:
+                    # Upload each file to Cloudinary
+                    result = cloudinary.uploader.upload(
+                        file,
+                        folder="templates/",
+                        resource_type="image"
+                    )
+                    uploaded_urls.append(result['public_id'])  # e.g., "templates/extra1"
+                    logger.info(f"Successfully uploaded additional image to Cloudinary: {result['public_id']}")
+                except Exception as e:
+                    logger.error(f"Failed to upload additional image to Cloudinary: {str(e)}")
+                    raise forms.ValidationError(f"Failed to upload additional image to Cloudinary: {str(e)}")
         return uploaded_urls
 
     def save(self, commit=True):

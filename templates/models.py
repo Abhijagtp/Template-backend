@@ -12,7 +12,7 @@ class Template(models.Model):
     description = models.TextField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.ImageField(upload_to='templates/')
+    image = models.CharField(max_length=500, blank=True, null=True)
     additional_images = models.JSONField(default=list)  # List of additional image URLs
     features = models.JSONField(default=list)  # List of features, e.g., ["Responsive Design", "SEO Optimized"]
     tech_stack = models.JSONField(default=list)  # List of tech stack, e.g., ["React", "Tailwind CSS"]
