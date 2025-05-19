@@ -6,6 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class TemplateAdminForm(forms.ModelForm):
     image_upload = forms.FileField(
         label="Upload Main Image",
@@ -25,13 +26,11 @@ class TemplateAdminForm(forms.ModelForm):
         image_upload = cleaned_data.get('image_upload')
         if image_upload:
             try:
-                # Upload the image to Cloudinary
                 result = cloudinary.uploader.upload(
                     image_upload,
                     folder="templates/",
                     resource_type="image"
                 )
-                # Store the public_id in the image field (CharField)
                 cleaned_data['image'] = result['public_id']
                 logger.info(f"Successfully uploaded image to Cloudinary: {result['public_id']}")
             except Exception as e:
@@ -45,7 +44,6 @@ class TemplateAdminForm(forms.ModelForm):
         if files:
             for file in files:
                 try:
-                    # Upload each file to Cloudinary
                     result = cloudinary.uploader.upload(
                         file,
                         folder="templates/",

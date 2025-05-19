@@ -12,7 +12,8 @@ class TemplateAdmin(admin.ModelAdmin):
     list_filter = ['category']
     search_fields = ['title', 'description']
     fields = [
-        'title', 'description', 'category', 'price', 'image',
+        'title', 'description', 'category', 'price',
+        'image_upload', 'image',  # Added image_upload
         'additional_images_upload', 'additional_images', 'features',
         'tech_stack', 'live_preview_url', 'zip_file_url'
     ]
