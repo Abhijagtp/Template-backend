@@ -54,14 +54,12 @@ class TemplateSerializer(serializers.ModelSerializer):
                     logger.warning(f"Invalid public_id format for image: {public_id}. Expected to start with 'templates/'.")
                     return None
 
-                # Remove "templates/" prefix for Cloudinary URL generation
-                public_id_clean = public_id.replace('templates/', '', 1)
-
-                # Build URL with /v1/ explicitly included
-                url = CloudinaryImage(public_id_clean).build_url(
-                    version='v1',  # Explicitly set version to v1
+                # Keep the full public_id including "templates/" for Cloudinary URL
+                # No need to remove "templates/" since it's part of the actual path
+                url = CloudinaryImage(public_id).build_url(
+                    version='v1',  # Fixed version to 'v1'
                     secure=True,
-                    cloud_name=settings.CLOUDINARY_CLOUD_NAME  # Updated to use CLOUDINARY_CLOUD_NAME
+                    cloud_name=settings.CLOUDINARY_CLOUD_NAME
                 )
                 logger.debug(f"Generated Cloudinary URL for image {public_id}: {url}")
                 return url
@@ -80,14 +78,11 @@ class TemplateSerializer(serializers.ModelSerializer):
                         logger.warning(f"Invalid public_id format for additional image: {public_id}. Expected to start with 'templates/'.")
                         continue
 
-                    # Remove "templates/" prefix for Cloudinary URL generation
-                    public_id_clean = public_id.replace('templates/', '', 1)
-
-                    # Build URL with /v1/ explicitly included
-                    url = CloudinaryImage(public_id_clean).build_url(
-                        version='v1',  # Explicitly set version to v1
+                    # Keep the full public_id including "templates/" for Cloudinary URL
+                    url = CloudinaryImage(public_id).build_url(
+                        version='v1',  # Fixed version to 'v1'
                         secure=True,
-                        cloud_name=settings.CLOUDINARY_CLOUD_NAME  # Updated to use CLOUDINARY_CLOUD_NAME
+                        cloud_name=settings.CLOUDINARY_CLOUD_NAME
                     )
                     logger.debug(f"Generated Cloudinary URL for additional image {public_id}: {url}")
                     urls.append(url)
