@@ -50,14 +50,13 @@ class TemplateSerializer(serializers.ModelSerializer):
     def get_image(self, obj):
         if obj.image:
             try:
-                # Ensure public_id starts with "templates/"
                 public_id = obj.image
                 if not public_id.startswith('templates/'):
                     logger.warning(f"Invalid public_id format for image: {public_id}. Expected to start with 'templates/'.")
                     return None
 
-                # Manually construct Cloudinary URL with /v1/
-                url = f"https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/image/upload/v1/{public_id}"
+                # Manually construct Cloudinary URL with optimization parameters
+                url = f"https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/image/upload/q_auto,f_auto,w_800,h_600,c_fill/v1/{public_id}"
                 logger.debug(f"Generated Cloudinary URL for image {public_id}: {url}")
                 return url
             except Exception as e:
@@ -70,13 +69,12 @@ class TemplateSerializer(serializers.ModelSerializer):
             try:
                 urls = []
                 for public_id in obj.additional_images:
-                    # Ensure public_id starts with "templates/"
                     if not public_id.startswith('templates/'):
                         logger.warning(f"Invalid public_id format for additional image: {public_id}. Expected to start with 'templates/'.")
                         continue
 
-                    # Manually construct Cloudinary URL with /v1/
-                    url = f"https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/image/upload/v1/{public_id}"
+                    # Manually construct Cloudinary URL with optimization parameters
+                    url = f"https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/image/upload/q_auto,f_auto,w_800,h_600,c_fill/v1/{public_id}"
                     logger.debug(f"Generated Cloudinary URL for additional image {public_id}: {url}")
                     urls.append(url)
                 return urls
