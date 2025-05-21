@@ -3,6 +3,7 @@ import os
 import dj_database_url
 from pathlib import Path
 import cloudinary  # Add this import
+import logging
 
 # Define BASE_DIR
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -143,6 +144,10 @@ print("CASHFREE_SECRET_KEY:", CASHFREE_SECRET_KEY)
 print("CASHFREE_ENV:", CASHFREE_ENV)
 print("CASHFREE_BASE_URL:", CASHFREE_BASE_URL)
 
+
+
+# Set up logging
+logger = logging.getLogger(__name__)
 # Cloudinary settings
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
@@ -150,13 +155,28 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
 
-# Initialize Cloudinary SDK
-cloudinary.config(
-    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
-    api_key=os.getenv('CLOUDINARY_API_KEY'),
-    api_secret=os.getenv('CLOUDINARY_API_SECRET'),
-    secure=True
-)
+# Validate and initialize Cloudinary SDK
+try:
+    if not all(CLOUDINARY_STORAGE.values()):
+        missing_vars = [key for key, value in CLOUDINARY_STORAGE.items() if not value]
+        logger.error(f"Missing Cloudinary environment variables: {missing_vars}")
+        raise Exception(f"Missing Cloudinary environment variables: {missing_vars}")
+
+    cloudinary.config(
+        cloud_name=CLOUDINARY_STORAGE['CLOUD_NAME'],
+        api_key=CLOUDINARY_STORAGE['API_KEY'],
+        api_secret=CLOUDINARY_STORAGE['API_SECRET'],
+        secure=True
+    )
+    logger.info("Cloudinary SDK initialized successfully")
+except Exception as e:
+    logger.error(f"Failed to initialize Cloudinary SDK: {str(e)}")
+    raise Exception(f"Failed to initialize Cloudinary SDK: {str(e)}")
+
+# Optionally, define these for easier access in code
+CLOUDINARY_CLOUD_NAME = CLOUDINARY_STORAGE['CLOUD_NAME']
+CLOUDINARY_API_KEY = CLOUDINARY_STORAGE['API_KEY']
+CLOUDINARY_API_SECRET = CLOUDINARY_STORAGE['API_SECRET']
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 

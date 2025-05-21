@@ -58,10 +58,10 @@ class TemplateSerializer(serializers.ModelSerializer):
                 public_id_clean = public_id.replace('templates/', '', 1)
 
                 # Build URL with /v1/ explicitly included
-                url = CloudinaryImage(public_id).build_url(
+                url = CloudinaryImage(public_id_clean).build_url(
                     version='v1',  # Explicitly set version to v1
                     secure=True,
-                    cloud_name=settings.CLOUDINARY_CLOUD_NAME
+                    cloud_name=settings.CLOUDINARY_CLOUD_NAME  # Updated to use CLOUDINARY_CLOUD_NAME
                 )
                 logger.debug(f"Generated Cloudinary URL for image {public_id}: {url}")
                 return url
@@ -87,7 +87,7 @@ class TemplateSerializer(serializers.ModelSerializer):
                     url = CloudinaryImage(public_id_clean).build_url(
                         version='v1',  # Explicitly set version to v1
                         secure=True,
-                        cloud_name=settings.CLOUDINARY_CLOUD_NAME
+                        cloud_name=settings.CLOUDINARY_CLOUD_NAME  # Updated to use CLOUDINARY_CLOUD_NAME
                     )
                     logger.debug(f"Generated Cloudinary URL for additional image {public_id}: {url}")
                     urls.append(url)
@@ -122,7 +122,7 @@ class TemplateSerializer(serializers.ModelSerializer):
                 validated_data['category'] = category
             else:
                 raise serializers.ValidationError("Invalid category data. Must provide 'name'.")
-        return super().update(instance, validated_data)
+        return super().update(instance, validated_data) 
 
 
 class PaymentSerializer(serializers.ModelSerializer):
