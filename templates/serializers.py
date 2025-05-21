@@ -55,9 +55,8 @@ class TemplateSerializer(serializers.ModelSerializer):
                     return None
 
                 # Keep the full public_id including "templates/" for Cloudinary URL
-                # No need to remove "templates/" since it's part of the actual path
                 url = CloudinaryImage(public_id).build_url(
-                    version='v1',  # Fixed version to 'v1'
+                    version='v1',  # Ensure version is 'v1'
                     secure=True,
                     cloud_name=settings.CLOUDINARY_CLOUD_NAME
                 )
@@ -80,7 +79,7 @@ class TemplateSerializer(serializers.ModelSerializer):
 
                     # Keep the full public_id including "templates/" for Cloudinary URL
                     url = CloudinaryImage(public_id).build_url(
-                        version='v1',  # Fixed version to 'v1'
+                        version='v1',  # Ensure version is 'v1'
                         secure=True,
                         cloud_name=settings.CLOUDINARY_CLOUD_NAME
                     )
