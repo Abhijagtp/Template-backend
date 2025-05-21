@@ -4,6 +4,8 @@ import cloudinary
 from cloudinary import CloudinaryImage
 import logging
 from django.conf import settings
+from cloudinary.utils import cloudinary_url 
+
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -54,10 +56,11 @@ class TemplateSerializer(serializers.ModelSerializer):
                     logger.warning(f"Invalid public_id format for image: {public_id}. Expected to start with 'templates/'.")
                     return None
 
-                # Keep the full public_id including "templates/" for Cloudinary URL
-                url = CloudinaryImage(public_id).build_url(
-                    version='v1',  # Ensure version is 'v1'
+                # Use cloudinary_url to generate URL
+                url, _ = cloudinary_url(
+                    public_id,
                     secure=True,
+                    version='v1',  # Explicitly set version to 'v1'
                     cloud_name=settings.CLOUDINARY_CLOUD_NAME
                 )
                 logger.debug(f"Generated Cloudinary URL for image {public_id}: {url}")
@@ -77,10 +80,11 @@ class TemplateSerializer(serializers.ModelSerializer):
                         logger.warning(f"Invalid public_id format for additional image: {public_id}. Expected to start with 'templates/'.")
                         continue
 
-                    # Keep the full public_id including "templates/" for Cloudinary URL
-                    url = CloudinaryImage(public_id).build_url(
-                        version='v1',  # Ensure version is 'v1'
+                    # Use cloudinary_url to generate URL
+                    url, _ = cloudinary_url(
+                        public_id,
                         secure=True,
+                        version='v1',  # Explicitly set version to 'v1'
                         cloud_name=settings.CLOUDINARY_CLOUD_NAME
                     )
                     logger.debug(f"Generated Cloudinary URL for additional image {public_id}: {url}")
