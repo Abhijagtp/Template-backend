@@ -56,13 +56,8 @@ class TemplateSerializer(serializers.ModelSerializer):
                     logger.warning(f"Invalid public_id format for image: {public_id}. Expected to start with 'templates/'.")
                     return None
 
-                # Use cloudinary_url to generate URL
-                url, _ = cloudinary_url(
-                    public_id,
-                    secure=True,
-                    version='v1',  # Explicitly set version to 'v1'
-                    cloud_name=settings.CLOUDINARY_CLOUD_NAME
-                )
+                # Manually construct Cloudinary URL with /v1/
+                url = f"https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/image/upload/v1/{public_id}"
                 logger.debug(f"Generated Cloudinary URL for image {public_id}: {url}")
                 return url
             except Exception as e:
@@ -80,13 +75,8 @@ class TemplateSerializer(serializers.ModelSerializer):
                         logger.warning(f"Invalid public_id format for additional image: {public_id}. Expected to start with 'templates/'.")
                         continue
 
-                    # Use cloudinary_url to generate URL
-                    url, _ = cloudinary_url(
-                        public_id,
-                        secure=True,
-                        version='v1',  # Explicitly set version to 'v1'
-                        cloud_name=settings.CLOUDINARY_CLOUD_NAME
-                    )
+                    # Manually construct Cloudinary URL with /v1/
+                    url = f"https://res.cloudinary.com/{settings.CLOUDINARY_CLOUD_NAME}/image/upload/v1/{public_id}"
                     logger.debug(f"Generated Cloudinary URL for additional image {public_id}: {url}")
                     urls.append(url)
                 return urls
@@ -120,8 +110,7 @@ class TemplateSerializer(serializers.ModelSerializer):
                 validated_data['category'] = category
             else:
                 raise serializers.ValidationError("Invalid category data. Must provide 'name'.")
-        return super().update(instance, validated_data) 
-
+        return super().update(instance, validated_data)
 
 class PaymentSerializer(serializers.ModelSerializer):
     template = TemplateSerializer(read_only=True)
