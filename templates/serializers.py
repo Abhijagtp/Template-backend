@@ -2,6 +2,8 @@ from rest_framework import serializers
 from .models import Category, Template, Review, Payment, SupportInquiry
 import cloudinary
 from cloudinary import CloudinaryImage
+import logging
+from django.conf import settings
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -18,6 +20,9 @@ class ReviewSerializer(serializers.ModelSerializer):
         if not (1 <= value <= 5):
             raise serializers.ValidationError("Rating must be between 1 and 5.")
         return value
+
+
+logger = logging.getLogger(__name__)
 
 class TemplateSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
@@ -43,27 +48,52 @@ class TemplateSerializer(serializers.ModelSerializer):
     def get_image(self, obj):
         if obj.image:
             try:
-                # obj.image is now a public_id (e.g., "templates/image_name")
+                # Ensure public_id starts with "templates/"
                 public_id = obj.image
-                # Remove "templates/" prefix if present for Cloudinary URL generation
-                if public_id.startswith('templates/'):
-                    public_id_clean = public_id.replace('templates/', '')
-                else:
-                    public_id_clean = public_id
-                # Remove file extension if any
-                public_id_clean = public_id_clean.rsplit('.', 1)[0]
-                return CloudinaryImage(public_id_clean).build_url(secure=True)
+                if not public_id.startswith('templates/'):
+                    logger.warning(f"Invalid public_id format for image: {public_id}. Expected to start with 'templates/'.")
+                    return None
+
+                # Remove "templates/" prefix for Cloudinary URL generation
+                public_id_clean = public_id.replace('templates/', '', 1)
+
+                # Build URL with /v1/ explicitly included
+                url = CloudinaryImage(public_id).build_url(
+                    version='v1',  # Explicitly set version to v1
+                    secure=True,
+                    cloud_name=settings.CLOUDINARY_CLOUD_NAME
+                )
+                logger.debug(f"Generated Cloudinary URL for image {public_id}: {url}")
+                return url
             except Exception as e:
-                print(f"Error generating Cloudinary URL for image {obj.image}: {str(e)}")
+                logger.error(f"Error generating Cloudinary URL for image {obj.image}: {str(e)}")
                 return None
         return None
 
     def get_additional_images(self, obj):
         if obj.additional_images:
             try:
-                return [CloudinaryImage(image).build_url(secure=True) for image in obj.additional_images]
+                urls = []
+                for public_id in obj.additional_images:
+                    # Ensure public_id starts with "templates/"
+                    if not public_id.startswith('templates/'):
+                        logger.warning(f"Invalid public_id format for additional image: {public_id}. Expected to start with 'templates/'.")
+                        continue
+
+                    # Remove "templates/" prefix for Cloudinary URL generation
+                    public_id_clean = public_id.replace('templates/', '', 1)
+
+                    # Build URL with /v1/ explicitly included
+                    url = CloudinaryImage(public_id_clean).build_url(
+                        version='v1',  # Explicitly set version to v1
+                        secure=True,
+                        cloud_name=settings.CLOUDINARY_CLOUD_NAME
+                    )
+                    logger.debug(f"Generated Cloudinary URL for additional image {public_id}: {url}")
+                    urls.append(url)
+                return urls
             except Exception as e:
-                print(f"Error building Cloudinary URLs for additional_images: {str(e)}")
+                logger.error(f"Error generating Cloudinary URLs for additional_images {obj.additional_images}: {str(e)}")
                 return []
         return []
 
